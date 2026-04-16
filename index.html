@@ -3,45 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة مركز الراشد - iCloud Control</title>
+    <title>إدارة مركز الراشد - لوحة التحكم</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --accent: #00d2ff; --glass: rgba(255, 255, 255, 0.05); }
+        :root { --accent: #00d2ff; --glass: rgba(255, 255, 255, 0.05); --success: #10b981; }
         body {
-            background: linear-gradient(45deg, #0f172a, #1e293b);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: white; font-family: 'Segoe UI', sans-serif;
             margin: 0; padding: 20px; direction: rtl; min-height: 100vh;
         }
         .admin-card {
-            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 30px; max-width: 1100px; margin: 0 auto; padding: 30px;
+            border-radius: 35px; max-width: 1200px; margin: 0 auto; padding: 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
         }
-        header { text-align: center; margin-bottom: 30px; }
-        header h1 { color: var(--accent); font-size: 26px; }
+        header { text-align: center; margin-bottom: 40px; }
+        header h1 { color: var(--accent); font-size: 28px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(0, 210, 255, 0.3); }
         
-        .stats-row { display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
-        .stat-item { background: var(--glass); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); min-width: 150px; text-align: center; }
-        .stat-item span { display: block; font-size: 24px; font-weight: bold; color: var(--accent); }
+        .stats-row { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; }
+        .stat-item { background: var(--glass); padding: 20px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); min-width: 180px; text-align: center; }
+        .stat-item span { display: block; font-size: 32px; font-weight: bold; color: var(--accent); }
 
         #generateBtn {
-            width: 100%; padding: 18px; background: var(--accent); color: #000;
-            border: none; border-radius: 15px; font-size: 18px; font-weight: bold;
-            cursor: pointer; transition: 0.3s; margin-bottom: 30px;
+            width: 100%; padding: 20px; background: linear-gradient(90deg, var(--accent), #3b82f6); color: #000;
+            border: none; border-radius: 20px; font-size: 18px; font-weight: bold;
+            cursor: pointer; transition: 0.4s; margin-bottom: 40px; box-shadow: 0 10px 20px rgba(0,210,255,0.2);
         }
+        #generateBtn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,210,255,0.4); }
 
-        .preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
-        .preview-content { background: #1e293b; padding: 30px; border-radius: 25px; text-align: center; width: 350px; border: 1px solid var(--accent); }
-        #qrcode { background: white; padding: 10px; border-radius: 15px; display: inline-block; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 20px; }
+        th { padding: 15px; color: var(--accent); text-align: center; font-size: 15px; opacity: 0.8; }
+        td { padding: 18px; background: rgba(255,255,255,0.03); text-align: center; font-size: 14px; }
+        td:first-child { border-radius: 0 15px 15px 0; }
+        td:last-child { border-radius: 15px 0 0 15px; }
+        
+        .status-active { color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 12px; border-radius: 10px; }
+        .status-pending { color: #94a3b8; font-style: italic; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-        th { background: rgba(255,255,255,0.05); padding: 15px; color: var(--accent); text-align: right; }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .active-badge { color: #10b981; font-weight: bold; }
-        .view-btn, .delete-btn { border: none; padding: 8px; border-radius: 8px; cursor: pointer; margin: 2px; }
+        .preview-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
+        .preview-content { background: #1e293b; padding: 40px; border-radius: 35px; text-align: center; width: 380px; border: 1px solid var(--accent); }
+        #qrcode { background: white; padding: 15px; border-radius: 20px; display: inline-block; }
+
+        .action-btn { border: none; padding: 10px; border-radius: 12px; cursor: pointer; transition: 0.3s; margin: 0 3px; }
         .view-btn { background: var(--accent); color: #000; }
         .delete-btn { background: #ef4444; color: white; }
     </style>
@@ -49,25 +56,25 @@
 <body>
     <div class="admin-card">
         <header>
-            <h1><i class="fa-solid fa-gears"></i> مركز الراشد - لوحة الإدارة</h1>
+            <h1><i class="fa-solid fa-crown"></i> إدارة مركز الراشد - iCloud</h1>
             <div class="stats-row">
-                <div class="stat-item">الكل <span id="totalCards">0</span></div>
-                <div class="stat-item">مفعلة ✅ <span id="activeCards">0</span></div>
+                <div class="stat-item">إجمالي الكروت <span><i class="fa-solid fa-layer-group"></i> <small id="totalCards">0</small></span></div>
+                <div class="stat-item">المفعلة (الضمان) <span><i class="fa-solid fa-check-double"></i> <small id="activeCards">0</small></span></div>
             </div>
         </header>
 
-        <button id="generateBtn" onclick="handleGenerate()"><i class="fa-solid fa-plus"></i> إنشاء بطاقة ضمان جديدة</button>
+        <button id="generateBtn" onclick="handleGenerate()"><i class="fa-solid fa-plus-circle"></i> إصدار بطاقة جديدة</button>
 
         <div style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
                         <th>الاسم</th>
-                        <th>الايميل</th>
-                        <th>الهاتف</th>
+                        <th>الحساب (iCloud)</th>
+                        <th>رقم الهاتف المسجل</th>
                         <th>تاريخ التفعيل</th>
                         <th>الحالة</th>
-                        <th>تحكم</th>
+                        <th>التحكم</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -77,11 +84,11 @@
 
     <div id="previewOverlay" class="preview-overlay">
         <div class="preview-content">
-            <h3 id="previewTitle" style="color:white; margin-bottom:15px;"></h3>
+            <h3 id="previewTitle" style="color:white; margin-bottom:20px; font-size:22px;"></h3>
             <div id="qrcode"></div>
-            <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                <button onclick="downloadQR()" style="background:#10b981; border:none; padding:12px; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">حفظ الباركود صافي</button>
-                <button onclick="document.getElementById('previewOverlay').style.display='none'" style="background:#64748b; border:none; padding:10px; border-radius:10px; color:white; cursor:pointer;">إغلاق</button>
+            <div style="margin-top:30px; display:flex; flex-direction:column; gap:15px;">
+                <button onclick="downloadQR()" style="background:var(--success); border:none; padding:15px; border-radius:15px; color:white; font-weight:bold; cursor:pointer; font-size:16px;">حفظ الباركود (صافي)</button>
+                <button onclick="document.getElementById('previewOverlay').style.display='none'" style="background:rgba(255,255,255,0.1); border:none; padding:12px; border-radius:15px; color:white; cursor:pointer;">إغلاق النافذة</button>
             </div>
         </div>
     </div>
@@ -98,11 +105,11 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const clientSiteUrl = "https://alrashed-icloud.netlify.app/";
+        const clientSiteUrl = "https://alrashed-icloud.netlify.app/"; // تأكد من مطابقة هذا الرابط لصفحة الزبون
 
         async function handleGenerate() {
-            const boys = ["أحمد", "علي", "سجاد", "حسين", "يوسف", "مصطفى"];
-            const fathers = ["كريم", "جاسم", "محمد", "عباس", "رعد"];
+            const boys = ["أحمد", "علي", "سجاد", "حسين", "يوسف", "مصطفى", "مرتضى", "حيدر", "زيد", "عمر"];
+            const fathers = ["كريم", "جاسم", "محمد", "عباس", "رعد", "خالد", "ابراهيم", "ماجد", "سعد", "فيصل"];
             const fName = boys[Math.floor(Math.random()*boys.length)];
             const lName = fathers[Math.floor(Math.random()*fathers.length)];
             const year = Math.floor(Math.random()*(2007-1992+1))+1992;
@@ -112,7 +119,7 @@
                 firstName: fName, lastName: lName, dob: "1/1/"+year,
                 email: "user"+Math.floor(Math.random()*99)+year+"@icloud.com",
                 password: "AiQ#"+Math.floor(1000+Math.random()*9000),
-                status: "pending", phone: "لم يسجل بعد", activationDate: "---"
+                status: "pending", phone: "قيد الانتظار...", activationDate: "---"
             });
             openPreview(newRef.key, fName + " " + lName);
         }
@@ -120,7 +127,7 @@
         function openPreview(id, name) {
             document.getElementById("previewTitle").innerText = name;
             document.getElementById("qrcode").innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: clientSiteUrl+"?id="+id, width: 250, height: 250 });
+            new QRCode(document.getElementById("qrcode"), { text: clientSiteUrl+"?id="+id, width: 280, height: 280, correctLevel: QRCode.CorrectLevel.H });
             document.getElementById("previewOverlay").style.display = "flex";
             window.currentName = name;
         }
@@ -129,7 +136,7 @@
             const canvas = document.querySelector("#qrcode canvas");
             const link = document.createElement('a');
             link.download = `باركود-${window.currentName}.png`;
-            link.href = canvas.toDataURL();
+            link.href = canvas.toDataURL("image/png");
             link.click();
         }
 
@@ -141,14 +148,14 @@
                     const d = c.val();
                     if(d.status === 'active') activeCount++;
                     html = `<tr>
-                        <td>${d.firstName} ${d.lastName}</td>
+                        <td><b>${d.firstName} ${d.lastName}</b></td>
                         <td>${d.email}</td>
-                        <td style="color:var(--accent)">${d.phone}</td>
+                        <td style="color:var(--accent); font-weight:bold;">${d.phone}</td>
                         <td>${d.activationDate}</td>
-                        <td>${d.status === 'active' ? '<span class="active-badge">✅ مفعل</span>' : '⏳ بانتظار الزبون'}</td>
+                        <td>${d.status === 'active' ? '<span class="status-active">✅ مفعل</span>' : '<span class="status-pending">⏳ لم يفتح بعد</span>'}</td>
                         <td>
-                            <button class="view-btn" onclick="openPreview('${c.key}', '${d.firstName}')"><i class="fa-solid fa-qrcode"></i></button>
-                            <button class="delete-btn" onclick="if(prompt('yes للتأكيد')=='yes') db.ref('icloud_cards/${c.key}').remove()"><i class="fa-solid fa-trash"></i></button>
+                            <button class="action-btn view-btn" onclick="openPreview('${c.key}', '${d.firstName}')"><i class="fa-solid fa-qrcode"></i></button>
+                            <button class="action-btn delete-btn" onclick="if(confirm('هل تريد حذف هذه البطاقة؟')) db.ref('icloud_cards/${c.key}').remove()"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>` + html;
                 });
