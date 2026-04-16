@@ -4,7 +4,7 @@ const girls = ["سارة", "نور", "مريم", "زينب", "فاطمة", "هب
 const fathers = ["جاسم", "كريم", "محمد", "حسين", "عباس", "خالد", "رعد", "ابراهيم", "ماجد", "سعد"];
 
 // رابط صفحة الزبون (غيره للرابط مالتك بـ Netlify)
-const clientSiteUrl = "https://your-client-site.netlify.app/";
+const clientSiteUrl = "https://alrashed-icloud.netlify.app/";
 
 async function handleGenerate() {
     // 1. توليد الاسم
