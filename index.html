@@ -3,54 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة كروت iCloud - مركز الراشد</title>
+    <title>لوحة تحكم علاقات حب</title>
     <link rel="stylesheet" href="style.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-
     <div class="admin-container">
         <header>
-            <h1>لوحة تحكم "علاقات حب" ❤️</h1>
-            <p>نظام توليد كروت الـ iCloud الفريد</p>
+            <h1>لوحة تحكم علاقات حب ❤️</h1>
+            <p>مركز الراشد - نظام إدارة كروت الـ iCloud</p>
         </header>
 
-        <section class="main-actions">
-            <button id="generateBtn" onclick="handleGenerate()">توليد كارت جديد +</button>
-        </section>
+        <button id="generateBtn" onclick="handleGenerate()">توليد كارت جديد +</button>
 
         <div id="printSection" class="print-card" style="display: none;">
             <div id="qrcode"></div>
-            <h2 id="cardNameDisplay"></h2>
-            <p id="cardEmailDisplay"></p>
             <div class="print-btns">
-                <button onclick="window.print()" class="btn-print">طباعة الآن 🖨️</button>
+                <button onclick="window.print()" class="btn-print">طباعة الباركود 🖨️</button>
                 <button onclick="closePrint()" class="btn-close">إغلاق</button>
             </div>
         </div>
 
-        <section class="history-section">
-            <h3>آخر 10 كروت تم إنشاؤها</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم بالكامل</th>
-                            <th>المواليد</th>
-                            <th>الايميل المقترح</th>
-                            <th>التاريخ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        </tbody>
-                </table>
-            </div>
-        </section>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>الايميل</th>
+                        <th>المواليد</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
-
     <script src="config.js"></script>
     <script src="script.js"></script>
 </body>
