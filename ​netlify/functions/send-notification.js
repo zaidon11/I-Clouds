@@ -1,37 +1,51 @@
 const admin = require('firebase-admin');
 
-if (!admin.apps.length) {
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY 
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') 
-    : undefined;
-
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: privateKey
-    })
-  });
-}
-
 exports.handler = async (event) => {
+  // التأكد من أن الطلب من نوع POST فقط
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return { 
+      statusCode: 405, 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: 'Method Not Allowed' }) 
+    };
   }
 
   try {
-    const { token, title, body, customerId } = JSON.parse(event.body);
+    // تهيئة تطبيق الفايربيس إذا لم يكن مهيئاً من قبل
+    if (!admin.apps.length) {
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+      if (privateKey) {
+        // معالجة السطور الجديدة في المفتاح الخاص
+        privateKey = privateKey.replace(/\\n/g, '\n');
+      }
+
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey
+        })
+      });
+    }
+
+    // قراءة البيانات المرسلة من صفحة notifications.html
+    const { token, title, body, customerId } = JSON.parse(event.body || '{}');
 
     if (!token || !title || !body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'البيانات غير مكتملة' })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ success: false, error: 'البيانات غير مكتملة' })
       };
     }
 
+    // تجهيز هيكل الإشعار المرسل لـ Google FCM V1
     const message = {
       token: token,
-      notification: { title, body },
+      notification: { 
+        title: title, 
+        body: body 
+      },
       webpush: {
         fcmOptions: {
           link: customerId ? `/index.html?${customerId}` : '/'
@@ -39,6 +53,7 @@ exports.handler = async (event) => {
       }
     };
 
+    // إرسال الإشعار عبر Firebase Admin SDK
     const response = await admin.messaging().send(message);
 
     return {
@@ -46,11 +61,13 @@ exports.handler = async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ success: true, messageId: response })
     };
+
   } catch (error) {
+    // إرجاع تفاصيل الخطأ بوضوح في حال حدوث أي استثناء
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ success: false, error: error.message })
+      body: JSON.stringify({ success: false, error: error.message || 'حدث خطأ في الخادم' })
     };
   }
 };
