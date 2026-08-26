@@ -1,0 +1,9 @@
+{
+  "name": "rashed-notifications",
+  "version": "1.0.0",
+  "description": "FCM Notification Sender",
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.11.0"
+  }
+}
