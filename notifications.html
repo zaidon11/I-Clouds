@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة إشعارات مركز الراشد</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f4f6f9; font-family: system-ui, sans-serif; padding-bottom: 30px; }
+    .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .customer-list-item { cursor: pointer; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e9ecef; transition: all 0.2s; }
+    .customer-list-item:hover, .customer-list-item.active { background-color: #e7f1ff; border-color: #0d6efd; }
+    .panel-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1"><i class="fa-solid fa-bell me-2"></i> لوحة إشعارات مركز الراشد</span>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- قسم الإحصائيات -->
+    <div class="row g-3 mb-4 text-center">
+      <div class="col-6 col-md-2"><div class="card stat-card p-3"><small class="text-muted">كل الزبائن</small><h4 id="stat-total" class="fw-bold mb-0">0</h4></div></div>
+      <div class="col-6 col-md-2"><div class="card stat-card p-3"><small class="text-muted">🟢 مفعّل</small><h4 id="stat-active" class="fw-bold text-success mb-0">0</h4></div></div>
+      <div class="col-6 col-md-2"><div class="card stat-card p-3"><small class="text-muted">🔴 غير مفعّل</small><h4 id="stat-inactive" class="fw-bold text-danger mb-0">0</h4></div></div>
+      <div class="col-6 col-md-2"><div class="card stat-card p-3"><small class="text-muted">🔴 متأخر</small><h4 id="stat-late" class="fw-bold text-danger mb-0">0</h4></div></div>
+      <div class="col-6 col-md-2"><div class="card stat-card p-3"><small class="text-muted">🟠 قريب (1-3 يوم)</small><h4 id="stat-soon" class="fw-bold text-warning mb-0">0</h4></div></div>
+      <div class="col-6 col-md-2"><div class="card stat-card p-3"><small class="text-muted">🟢 دافع اليوم</small><h4 id="stat-paid" class="fw-bold text-info mb-0">0</h4></div></div>
+    </div>
+
+    <div class="row g-4">
+      <!-- البحث والقائمة -->
+      <div class="col-md-5 col-lg-4">
+        <div class="card panel-card p-3 bg-white">
+          <label class="form-label fw-bold">البحث عن زبون</label>
+          <input type="text" id="search-input" class="form-control mb-3" placeholder="الاسم، الهاتف، أو CUST-ID...">
+          <div id="customers-list" style="max-height: 500px; overflow-y: auto;">
+            <div class="text-center text-muted py-4">جاري تحميل الزبائن...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- بطاقة الإرسال المباشر -->
+      <div class="col-md-7 col-lg-8">
+        <div class="card panel-card p-4 bg-white">
+          <div id="no-selection" class="text-center text-muted py-5">
+            <i class="fa-regular fa-address-card fa-3x mb-3 text-secondary"></i>
+            <h5>اختر زبوناً من القائمة لعرض التفاصيل وإرسال الإشعار</h5>
+          </div>
+
+          <div id="selected-customer-panel" class="d-none">
+            <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3">
+              <div>
+                <h4 id="cust-name" class="fw-bold mb-1">-</h4>
+                <span id="cust-id" class="badge bg-secondary">-</span>
+                <span id="cust-phone" class="text-muted ms-2">-</span>
+              </div>
+              <div id="cust-fcm-badge"></div>
+            </div>
+
+            <div class="row g-2 mb-3 p-3 bg-light rounded text-center">
+              <div class="col-3"><small class="text-muted d-block">حالة القسط</small><span id="cust-due-status" class="fw-bold">-</span></div>
+              <div class="col-3"><small class="text-muted d-block">المبلغ المتبقي</small><span id="cust-remaining" class="fw-bold">-</span></div>
+              <div class="col-3"><small class="text-muted d-block">تاريخ الاستحقاق</small><span id="cust-due-date" class="fw-bold">-</span></div>
+              <div class="col-3"><small class="text-muted d-block">آخر دفعة</small><span id="cust-last-payment-date" class="fw-bold">-</span></div>
+            </div>
+
+            <form id="send-form">
+              <div class="mb-3">
+                <label class="form-label fw-bold">عنوان الإشعار</label>
+                <input type="text" id="notif-title" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">نص الرسالة</label>
+                <textarea id="notif-body" class="form-control" rows="3" required></textarea>
+              </div>
+
+              <div id="alert-box" class="alert d-none"></div>
+
+              <button type="submit" id="btn-send" class="btn btn-primary btn-lg w-100">
+                <i class="fa-solid fa-paper-plane me-2"></i> 🔔 إرسال الإشعار فوراً
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <script>
+    // ⚠️ استبدل المفاتيح الخاصة بك من index.html
+    const firebaseConfig = {
+      apiKey: "ضع_هنا_API_KEY",
+      authDomain: "PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://PROJECT_ID.firebaseio.com",
+      projectId: "PROJECT_ID",
+      storageBucket: "PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let allCustomers = [], selectedCustomer = null;
+
+    function loadCustomers() {
+      db.ref('installments/customers').once('value', snapshot => {
+        let data = snapshot.val() || {};
+        db.ref('customers').once('value', snapshot2 => {
+          let data2 = snapshot2.val() || {};
+          let combined = { ...data2, ...data };
+          allCustomers = Object.keys(combined).map(id => ({ id, ...combined[id] }));
+          calculateStats();
+          renderList(allCustomers);
+        });
+      });
+    }
+
+    function calculateStats() {
+      let active = 0, inactive = 0, late = 0, soon = 0, paid = 0;
+      allCustomers.forEach(c => {
+        if (c.fcmToken) active++; else inactive++;
+        let st = evaluateDueDate(c);
+        if (st === 'late') late++;
+        else if (st === 'soon') soon++;
+        else if (st === 'paid') paid++;
+      });
+      document.getElementById('stat-total').innerText = allCustomers.length;
+      document.getElementById('stat-active').innerText = active;
+      document.getElementById('stat-inactive').innerText = inactive;
+      document.getElementById('stat-late').innerText = late;
+      document.getElementById('stat-soon').innerText = soon;
+      document.getElementById('stat-paid').innerText = paid;
+    }
+
+    function evaluateDueDate(c) {
+      if (!c.dueDate) return 'normal';
+      const today = new Date().setHours(0,0,0,0);
+      const dueDate = new Date(c.dueDate).setHours(0,0,0,0);
+      const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+      if (c.lastPaymentDate && new Date(c.lastPaymentDate).setHours(0,0,0,0) === today) return 'paid';
+      if (diffDays < 0) return 'late';
+      if (diffDays >= 0 && diffDays <= 3) return 'soon';
+      return 'normal';
+    }
+
+    function renderList(list) {
+      const container = document.getElementById('customers-list');
+      container.innerHTML = list.length === 0 ? '<div class="text-center text-muted py-3">لا يوجد نتائج</div>' : '';
+      list.forEach(c => {
+        const item = document.createElement('div');
+        item.className = `customer-list-item p-3 ${selectedCustomer && selectedCustomer.id === c.id ? 'active' : ''}`;
+        item.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <div><strong class="d-block">${c.name || 'بدون اسم'}</strong><small class="text-muted">${c.id}</small></div>
+            <span class="badge ${c.fcmToken ? 'bg-success' : 'bg-danger'}">${c.fcmToken ? '🟢 مفعّل' : '🔴 غير مفعّل'}</span>
+          </div>`;
+        item.onclick = () => selectCustomer(c);
+        container.appendChild(item);
+      });
+    }
+
+    function selectCustomer(c) {
+      selectedCustomer = c;
+      renderList(allCustomers);
+      document.getElementById('no-selection').classList.add('d-none');
+      document.getElementById('selected-customer-panel').classList.remove('d-none');
+
+      document.getElementById('cust-name').innerText = c.name || 'بدون اسم';
+      document.getElementById('cust-id').innerText = c.id;
+      document.getElementById('cust-phone').innerText = c.phone || 'بدون رقم';
+      document.getElementById('cust-fcm-badge').innerHTML = c.fcmToken 
+        ? '<span class="badge bg-success p-2">🟢 مفعّل</span>' 
+        : '<span class="badge bg-danger p-2">🔴 غير مفعّل</span>';
+
+      document.getElementById('cust-remaining').innerText = c.remainingAmount ? `${c.remainingAmount} د.ع` : '-';
+      document.getElementById('cust-due-date').innerText = c.dueDate || '-';
+      document.getElementById('cust-last-payment-date').innerText = c.lastPaymentDate || '-';
+
+      const st = evaluateDueDate(c);
+      const stEl = document.getElementById('cust-due-status');
+      if (st === 'paid') stEl.innerHTML = '<span class="text-info">🔵 تم الدفع اليوم</span>';
+      else if (st === 'late') stEl.innerHTML = '<span class="text-danger">🔴 متأخر</span>';
+      else if (st === 'soon') stEl.innerHTML = '<span class="text-warning">🟠 قريب</span>';
+      else stEl.innerHTML = '<span class="text-success">🟢 مستمر</span>';
+
+      // رسالة افتراضية
+      const name = c.name || 'الزبون العزيز';
+      if (st === 'paid') {
+        document.getElementById('notif-title').value = "شكرًا لتسديد القسط";
+        document.getElementById('notif-body').value = `السلام عليكم ${name}، شكرًا لتسديد القسط في مركز الراشد.`;
+      } else if (st === 'late') {
+        document.getElementById('notif-title').value = "تنبيه: قسط مستحق المتأخرات";
+        document.getElementById('notif-body').value = `السلام عليكم ${name}، نود تذكيرك بوجود قسط مستحق عليك لمركز الراشد.`;
+      } else {
+        document.getElementById('notif-title').value = "تذكير بقسط مركز الراشد";
+        document.getElementById('notif-body').value = `السلام عليكم ${name}، نود تذكيرك بموعد قسطك القادم لدى مركز الراشد.`;
+      }
+    }
+
+    // زر الإرسال المباشر
+    document.getElementById('send-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!selectedCustomer || !selectedCustomer.fcmToken) {
+        showAlert('هذا الزبون غير مفعّل للإشعارات', 'danger');
+        return;
+      }
+
+      const btn = document.getElementById('btn-send');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> جاري الإرسال...';
+
+      try {
+        const res = await fetch('/.netlify/functions/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: selectedCustomer.fcmToken,
+            title: document.getElementById('notif-title').value,
+            body: document.getElementById('notif-body').value,
+            customerId: selectedCustomer.id
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showAlert('تم إرسال الإشعار بنجاح للتلفون! 🎉', 'success');
+        } else {
+          showAlert(`خطأ في الإرسال: ${data.error || 'فشل الاتصال'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`حدث خطأ: ${err.message}`, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> 🔔 إرسال الإشعار فوراً';
+      }
+    });
+
+    function showAlert(msg, type) {
+      const a = document.getElementById('alert-box');
+      a.className = `alert alert-${type}`;
+      a.innerText = msg;
+      a.classList.remove('d-none');
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      renderList(allCustomers.filter(c => 
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q)) ||
+        (c.id && c.id.toLowerCase().includes(q))
+      ));
+    });
+
+    window.onload = loadCustomers;
+  </script>
+</body>
+</html>
