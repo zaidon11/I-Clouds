@@ -97,18 +97,19 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
   <script>
-    // ⚠️ استبدل المفاتيح الخاصة بك من index.html
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyC6nz1_dENnayngLi1iiq8KDOKQmbfwNDI",
-  authDomain: "rashedshopv1.firebaseapp.com",
-  databaseURL: "https://rashedshopv1-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "rashedshopv1",
-  storageBucket: "rashedshopv1.firebasestorage.app",
-  messagingSenderId: "946603870783",
-  appId: "1:946603870783:web:59aaa8549fab98635fc68a",
-  measurementId: "G-CKF2TS086Q"
-};
+    // ⚠️ استبدل المعلومات بالأسفل بمفاتيح مشروعك من Firebase
+    const firebaseConfig = {
+      apiKey: "ضع_هنا_API_KEY",
+      authDomain: "PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://PROJECT_ID.firebaseio.com",
+      projectId: "PROJECT_ID",
+      storageBucket: "PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+
+    // ⚠️ ضع هنا رابط الخدمة التي سنحصل عليها من موقع Render (مثال: https://rashed-notif.onrender.com)
+    const RENDER_SERVER_URL = "https://your-render-app.onrender.com";
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -196,7 +197,6 @@ const firebaseConfig = {
       else if (st === 'soon') stEl.innerHTML = '<span class="text-warning">🟠 قريب</span>';
       else stEl.innerHTML = '<span class="text-success">🟢 مستمر</span>';
 
-      // رسالة افتراضية
       const name = c.name || 'الزبون العزيز';
       if (st === 'paid') {
         document.getElementById('notif-title').value = "شكرًا لتسديد القسط";
@@ -210,7 +210,7 @@ const firebaseConfig = {
       }
     }
 
-    // زر الإرسال المباشر
+    // زر الإرسال المباشر عبر سيرفر Render
     document.getElementById('send-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!selectedCustomer || !selectedCustomer.fcmToken) {
@@ -223,7 +223,7 @@ const firebaseConfig = {
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> جاري الإرسال...';
 
       try {
-        const res = await fetch('/.netlify/functions/send-notification', {
+        const res = await fetch(`${RENDER_SERVER_URL}/send-notification`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
